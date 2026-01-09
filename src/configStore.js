@@ -40,13 +40,14 @@ const configStore = {
     return configs;
   },
   
-  add: ({ phoneNumber, targetUrl, description, phoneNumberId }) => {
+  add: ({ phoneNumber, targetUrl, description, phoneNumberId, routeBy }) => {
     const newConfig = {
       id: Date.now().toString(),
       phoneNumber: phoneNumber.replace(/\D/g, ''), // Solo números
       phoneNumberId: phoneNumberId || null, // ID de Meta WhatsApp Business
       targetUrl,
       description: description || '',
+      routeBy: routeBy || 'sender', // 'sender' = por quien escribe, 'business' = por phoneNumberId
       active: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
@@ -93,7 +94,23 @@ const configStore = {
   
   // Buscar por phone_number_id de Meta (más preciso)
   findByPhoneNumberId: (phoneNumberId) => {
-    return configs.find(c => c.phoneNumberId === phoneNumberId);
+    return configs.find(c => c.phoneNumberId === phoneNumberId && c.routeBy === 'business');
+  },
+  
+  // Buscar por número del remitente (quien escribe)
+  findBySenderPhone: (senderPhone) => {
+    const cleanPhone = senderPhone.replace(/\D/g, '');
+    return configs.find(c => {
+      if (c.routeBy !== 'sender') return false;
+      return c.phoneNumber === cleanPhone || 
+             cleanPhone.endsWith(c.phoneNumber) ||
+             c.phoneNumber.endsWith(cleanPhone);
+    });
+  },
+  
+  // Buscar configuración default (cuando no hay match específico)
+  findDefault: () => {
+    return configs.find(c => c.routeBy === 'default' && c.active);
   },
   
   // Sincronizar desde API externa

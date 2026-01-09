@@ -284,20 +284,24 @@
       <form id="configForm">
         <div class="form-row">
           <div class="form-group">
-            <label>Número de Teléfono</label>
+            <label>Teléfono del Usuario/Tester</label>
             <input type="text" id="phoneNumber" placeholder="5491123456789" required>
           </div>
           <div class="form-group">
-            <label>Phone Number ID (Meta)</label>
-            <input type="text" id="phoneNumberId" placeholder="123456789012345">
+            <label>Tipo de Routing</label>
+            <select id="routeBy" style="width:100%;padding:12px;border-radius:8px;background:rgba(0,0,0,0.3);color:#fff;border:1px solid rgba(255,255,255,0.2);">
+              <option value="sender">Por quien escribe (tester)</option>
+              <option value="business">Por phoneNumberId (negocio)</option>
+              <option value="default">Default (fallback)</option>
+            </select>
           </div>
           <div class="form-group">
-            <label>URL de Destino</label>
-            <input type="url" id="targetUrl" placeholder="https://api.ejemplo.com" required>
+            <label>URL de Destino (servidor del dev)</label>
+            <input type="url" id="targetUrl" placeholder="https://mi-servidor-dev.com" required>
           </div>
           <div class="form-group">
-            <label>Descripción</label>
-            <input type="text" id="description" placeholder="Cliente X">
+            <label>Dev/Descripción</label>
+            <input type="text" id="description" placeholder="Juan - Backend">
           </div>
           <button type="submit" class="btn btn-primary">Agregar</button>
         </div>
@@ -317,17 +321,24 @@
     </div>
     
     <div class="card usage-section">
-      <h2>📖 Cómo Usar el Proxy</h2>
+      <h2>📖 Cómo Funciona</h2>
       
-      <h3 style="color: #00ff88; margin: 20px 0 10px;">🟢 WhatsApp Cloud API (Meta)</h3>
+      <h3 style="color: #00ff88; margin: 20px 0 10px;">👤 Routing por Tester (recomendado para devs)</h3>
       <p style="color: #aaa; margin-bottom: 16px;">
-        Configura el webhook de Meta para apuntar a <strong>/webhook</strong>. El proxy detecta automáticamente el <code>phone_number_id</code> y redirige al destino configurado.
+        Cada dev agrega su teléfono personal. Cuando escriba al número de WhatsApp del negocio, el mensaje se redirige a SU servidor local.
       </p>
-      <code>Webhook URL: https://tu-dominio.com/webhook</code>
-      <p style="color: #888; margin-top: 8px;">Verificación Token (configurar en .env):</p>
-      <code>META_VERIFY_TOKEN=mi_token_verificacion</code>
+      <code>Juan (tel: 5491155551234) → https://juan-dev.ngrok.io<br>María (tel: 5491155555678) → https://maria-dev.ngrok.io</code>
       
-      <h3 style="color: #00d9ff; margin: 20px 0 10px;">🔀 Proxy Genérico</h3>
+      <h3 style="color: #ffa500; margin: 20px 0 10px;">🎯 Config Default (fallback)</h3>
+      <p style="color: #aaa; margin-bottom: 16px;">
+        Si nadie matchea, el mensaje va al servidor default (ej: staging).
+      </p>
+      <code>Default → https://staging.miapp.com</code>
+      
+      <h3 style="color: #00d9ff; margin: 20px 0 10px;">🏢 Routing por Business (producción)</h3>
+      <p style="color: #aaa; margin-bottom: 16px;">
+        Para cuando tengas múltiples números de WhatsApp Business, cada uno con su servidor.
+      </p>
       <p style="color: #aaa; margin-bottom: 16px;">
         Envía peticiones a <strong>/proxy/</strong> incluyendo el número de teléfono:
       </p>
@@ -364,11 +375,13 @@
       const targetUrl = document.getElementById('targetUrl').value;
       const description = document.getElementById('description').value;
       
+      const routeBy = document.getElementById('routeBy').value;
+      
       try {
         const res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phoneNumber, phoneNumberId, targetUrl, description })
+          body: JSON.stringify({ phoneNumber, routeBy, targetUrl, description })
         });
         
         if (res.ok) {
@@ -409,10 +422,15 @@
         return;
       }
       
-      list.innerHTML = configs.map(config => `
+      list.innerHTML = configs.map(config => {
+        const routeLabel = config.routeBy === 'sender' ? '👤 Tester' : 
+                          config.routeBy === 'default' ? '🎯 Default' : '🏢 Business';
+        const routeColor = config.routeBy === 'sender' ? '#00ff88' : 
+                          config.routeBy === 'default' ? '#ffa500' : '#00d9ff';
+        return `
         <div class="config-item ${config.active ? '' : 'inactive'} ${config.synced ? 'synced' : ''}">
-          <span class="phone">📱 ${formatPhone(config.phoneNumber)}${config.synced ? '<span class="badge sync">SYNC</span>' : ''}</span>
-          <span class="phone-id">${config.phoneNumberId || '-'}</span>
+          <span class="phone">📱 ${formatPhone(config.phoneNumber)}</span>
+          <span class="phone-id" style="color:${routeColor}">${routeLabel}</span>
           <span class="url">🔗 ${config.targetUrl}</span>
           <span class="description">${config.description || 'Sin descripción'}</span>
           <button class="btn btn-toggle ${config.active ? 'active' : 'inactive'}" 
@@ -423,7 +441,7 @@
             Eliminar
           </button>
         </div>
-      `).join('');
+      `}).join('');
     }
     
     function formatPhone(phone) {

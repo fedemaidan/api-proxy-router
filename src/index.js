@@ -143,25 +143,43 @@ app.post('/webhook', async (req, res) => {
   const parsed = metaWebhookParser.parse(body);
   console.log('[META] Webhook recibido:', JSON.stringify(parsed, null, 2));
 
-  // Buscar configuración por phone_number_id (ID del número de WhatsApp Business)
-  // Esto es más preciso que usar el número del remitente
+  // ROUTING: Buscar configuración según quién escribe (senderPhone)
   let config = null;
   
-  if (parsed.phoneNumberId) {
-    config = configStore.findByPhoneNumberId(parsed.phoneNumberId);
+  // 1. Primero buscar por número del remitente (usuario que escribe)
+  if (parsed.senderPhone) {
+    config = configStore.findBySenderPhone(parsed.senderPhone);
+    if (config) {
+      console.log(`[META] Routing por SENDER: ${parsed.senderPhone} -> ${config.targetUrl}`);
+    }
   }
   
-  // Si no encontró por phoneNumberId, buscar por número de teléfono del business
-  if (!config && parsed.displayPhoneNumber) {
-    config = configStore.findByPhone(parsed.displayPhoneNumber);
+  // 2. Si no hay config por sender, buscar por phoneNumberId del negocio
+  if (!config && parsed.phoneNumberId) {
+    config = configStore.findByPhoneNumberId(parsed.phoneNumberId);
+    if (config) {
+      console.log(`[META] Routing por BUSINESS: ${parsed.phoneNumberId} -> ${config.targetUrl}`);
+    }
+  }
+  
+  // 3. Si no hay ninguna, buscar config default
+  if (!config) {
+    config = configStore.findDefault();
+    if (config) {
+      console.log(`[META] Routing por DEFAULT -> ${config.targetUrl}`);
+    }
   }
 
   if (!config) {
-    console.warn('[META] No hay configuración para este número de WhatsApp Business:', parsed.phoneNumberId || parsed.displayPhoneNumber);
+    console.warn('[META] No hay configuración para:', {
+      senderPhone: parsed.senderPhone,
+      phoneNumberId: parsed.phoneNumberId
+    });
     // Respondemos 200 para que Meta no reintente
     return res.status(200).json({ 
       received: true,
       warning: 'No hay configuración para este número',
+      senderPhone: parsed.senderPhone,
       phoneNumberId: parsed.phoneNumberId
     });
   }
