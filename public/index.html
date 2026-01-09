@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Proxy Router - Configuración</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    header {
+      text-align: center;
+      padding: 40px 0;
+    }
+    
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #00d9ff, #00ff88);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    header p {
+      color: #888;
+      font-size: 1.1rem;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+    
+    .card h2 {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      color: #00d9ff;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      color: #aaa;
+      font-size: 0.9rem;
+    }
+    
+    .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+    
+    .form-group input:focus {
+      outline: none;
+      border-color: #00d9ff;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr auto;
+      gap: 16px;
+      align-items: end;
+    }
+    
+    @media (max-width: 768px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(90deg, #00d9ff, #00ff88);
+      color: #1a1a2e;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 217, 255, 0.4);
+    }
+    
+    .btn-danger {
+      background: #ff4757;
+      color: #fff;
+      padding: 8px 16px;
+      font-size: 0.9rem;
+    }
+    
+    .btn-danger:hover {
+      background: #ff6b7a;
+    }
+    
+    .btn-toggle {
+      padding: 8px 16px;
+      font-size: 0.9rem;
+    }
+    
+    .btn-toggle.active {
+      background: #00ff88;
+      color: #1a1a2e;
+    }
+    
+    .btn-toggle.inactive {
+      background: #666;
+      color: #fff;
+    }
+    
+    .config-list {
+      margin-top: 20px;
+    }
+    
+    .config-item {
+      display: grid;
+      grid-template-columns: 150px 1fr 200px 80px 80px;
+      gap: 16px;
+      align-items: center;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      border-left: 4px solid #00d9ff;
+    }
+    
+    .config-item.inactive {
+      border-left-color: #666;
+      opacity: 0.6;
+    }
+    
+    @media (max-width: 900px) {
+      .config-item {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+    }
+    
+    .config-item .phone {
+      font-weight: 600;
+      color: #00ff88;
+      font-size: 1.1rem;
+    }
+    
+    .config-item .url {
+      color: #ccc;
+      word-break: break-all;
+      font-size: 0.9rem;
+    }
+    
+    .config-item .description {
+      color: #888;
+      font-size: 0.85rem;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+    
+    .empty-state svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+    
+    .usage-section {
+      margin-top: 40px;
+    }
+    
+    .usage-section code {
+      display: block;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 16px;
+      border-radius: 8px;
+      margin: 12px 0;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      color: #00ff88;
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 500;
+      animation: slideIn 0.3s ease;
+      z-index: 1000;
+    }
+    
+    .toast.success {
+      background: #00c853;
+    }
+    
+    .toast.error {
+      background: #ff4757;
+    }
+    
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔀 API Proxy Router</h1>
+      <p>Configura redirecciones de API según el número de teléfono</p>
+    </header>
+    
+    <div class="card">
+      <h2>➕ Nueva Configuración</h2>
+      <form id="configForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Número de Teléfono</label>
+            <input type="text" id="phoneNumber" placeholder="5491123456789" required>
+          </div>
+          <div class="form-group">
+            <label>URL de Destino</label>
+            <input type="url" id="targetUrl" placeholder="https://api.ejemplo.com" required>
+          </div>
+          <div class="form-group">
+            <label>Descripción</label>
+            <input type="text" id="description" placeholder="Cliente X">
+          </div>
+          <button type="submit" class="btn btn-primary">Agregar</button>
+        </div>
+      </form>
+    </div>
+    
+    <div class="card">
+      <h2>📋 Configuraciones Activas</h2>
+      <div id="configList" class="config-list">
+        <div class="empty-state">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <p>No hay configuraciones. Agrega una para comenzar.</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card usage-section">
+      <h2>📖 Cómo Usar el Proxy</h2>
+      <p style="color: #aaa; margin-bottom: 16px;">
+        Envía peticiones a <strong>/proxy/</strong> incluyendo el número de teléfono de una de estas formas:
+      </p>
+      
+      <p style="color: #888; margin-top: 8px;">1. Header X-Phone-Number:</p>
+      <code>curl -H "X-Phone-Number: 5491123456789" http://localhost:3500/proxy/endpoint</code>
+      
+      <p style="color: #888; margin-top: 8px;">2. Query parameter:</p>
+      <code>curl "http://localhost:3500/proxy/endpoint?phone=5491123456789"</code>
+      
+      <p style="color: #888; margin-top: 8px;">3. Body JSON:</p>
+      <code>curl -X POST -H "Content-Type: application/json" -d '{"phoneNumber":"5491123456789"}' http://localhost:3500/proxy/endpoint</code>
+    </div>
+  </div>
+  
+  <script>
+    const API_URL = '/api/config';
+    
+    // Cargar configuraciones al iniciar
+    document.addEventListener('DOMContentLoaded', loadConfigs);
+    
+    // Manejar formulario
+    document.getElementById('configForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const phoneNumber = document.getElementById('phoneNumber').value;
+      const targetUrl = document.getElementById('targetUrl').value;
+      const description = document.getElementById('description').value;
+      
+      try {
+        const res = await fetch(API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber, targetUrl, description })
+        });
+        
+        if (res.ok) {
+          showToast('Configuración agregada correctamente', 'success');
+          document.getElementById('configForm').reset();
+          loadConfigs();
+        } else {
+          const error = await res.json();
+          showToast(error.error || 'Error al agregar', 'error');
+        }
+      } catch (err) {
+        showToast('Error de conexión', 'error');
+      }
+    });
+    
+    async function loadConfigs() {
+      try {
+        const res = await fetch(API_URL);
+        const configs = await res.json();
+        renderConfigs(configs);
+      } catch (err) {
+        console.error('Error cargando configuraciones:', err);
+      }
+    }
+    
+    function renderConfigs(configs) {
+      const list = document.getElementById('configList');
+      
+      if (configs.length === 0) {
+        list.innerHTML = `
+          <div class="empty-state">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <p>No hay configuraciones. Agrega una para comenzar.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      list.innerHTML = configs.map(config => `
+        <div class="config-item ${config.active ? '' : 'inactive'}">
+          <span class="phone">📱 ${formatPhone(config.phoneNumber)}</span>
+          <span class="url">🔗 ${config.targetUrl}</span>
+          <span class="description">${config.description || 'Sin descripción'}</span>
+          <button class="btn btn-toggle ${config.active ? 'active' : 'inactive'}" 
+                  onclick="toggleActive('${config.id}', ${!config.active})">
+            ${config.active ? 'Activo' : 'Inactivo'}
+          </button>
+          <button class="btn btn-danger" onclick="deleteConfig('${config.id}')">
+            Eliminar
+          </button>
+        </div>
+      `).join('');
+    }
+    
+    function formatPhone(phone) {
+      if (phone.length > 10) {
+        return `+${phone.slice(0, 2)} ${phone.slice(2, 5)} ${phone.slice(5)}`;
+      }
+      return phone;
+    }
+    
+    async function toggleActive(id, active) {
+      try {
+        const res = await fetch(`${API_URL}/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ active })
+        });
+        
+        if (res.ok) {
+          showToast(`Configuración ${active ? 'activada' : 'desactivada'}`, 'success');
+          loadConfigs();
+        }
+      } catch (err) {
+        showToast('Error al actualizar', 'error');
+      }
+    }
+    
+    async function deleteConfig(id) {
+      if (!confirm('¿Estás seguro de eliminar esta configuración?')) return;
+      
+      try {
+        const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+        
+        if (res.ok) {
+          showToast('Configuración eliminada', 'success');
+          loadConfigs();
+        }
+      } catch (err) {
+        showToast('Error al eliminar', 'error');
+      }
+    }
+    
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+  </script>
+</body>
+</html>
