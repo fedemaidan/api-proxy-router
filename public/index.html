@@ -86,7 +86,7 @@
     
     .form-row {
       display: grid;
-      grid-template-columns: 1fr 2fr 1fr auto;
+      grid-template-columns: 1fr 1fr 2fr 1fr auto;
       gap: 16px;
       align-items: end;
     }
@@ -149,7 +149,7 @@
     
     .config-item {
       display: grid;
-      grid-template-columns: 150px 1fr 200px 80px 80px;
+      grid-template-columns: 150px 140px 1fr 150px 80px 80px;
       gap: 16px;
       align-items: center;
       padding: 16px;
@@ -157,6 +157,29 @@
       border-radius: 8px;
       margin-bottom: 12px;
       border-left: 4px solid #00d9ff;
+    }
+
+    .config-item .phone-id {
+      font-size: 0.8rem;
+      color: #00d9ff;
+      font-family: monospace;
+    }
+
+    .config-item.synced {
+      border-left-color: #ffa500;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      margin-left: 8px;
+    }
+
+    .badge.sync {
+      background: #ffa500;
+      color: #000;
     }
     
     .config-item.inactive {
@@ -265,6 +288,10 @@
             <input type="text" id="phoneNumber" placeholder="5491123456789" required>
           </div>
           <div class="form-group">
+            <label>Phone Number ID (Meta)</label>
+            <input type="text" id="phoneNumberId" placeholder="123456789012345">
+          </div>
+          <div class="form-group">
             <label>URL de Destino</label>
             <input type="url" id="targetUrl" placeholder="https://api.ejemplo.com" required>
           </div>
@@ -291,8 +318,18 @@
     
     <div class="card usage-section">
       <h2>📖 Cómo Usar el Proxy</h2>
+      
+      <h3 style="color: #00ff88; margin: 20px 0 10px;">🟢 WhatsApp Cloud API (Meta)</h3>
       <p style="color: #aaa; margin-bottom: 16px;">
-        Envía peticiones a <strong>/proxy/</strong> incluyendo el número de teléfono de una de estas formas:
+        Configura el webhook de Meta para apuntar a <strong>/webhook</strong>. El proxy detecta automáticamente el <code>phone_number_id</code> y redirige al destino configurado.
+      </p>
+      <code>Webhook URL: https://tu-dominio.com/webhook</code>
+      <p style="color: #888; margin-top: 8px;">Verificación Token (configurar en .env):</p>
+      <code>META_VERIFY_TOKEN=mi_token_verificacion</code>
+      
+      <h3 style="color: #00d9ff; margin: 20px 0 10px;">🔀 Proxy Genérico</h3>
+      <p style="color: #aaa; margin-bottom: 16px;">
+        Envía peticiones a <strong>/proxy/</strong> incluyendo el número de teléfono:
       </p>
       
       <p style="color: #888; margin-top: 8px;">1. Header X-Phone-Number:</p>
@@ -303,6 +340,12 @@
       
       <p style="color: #888; margin-top: 8px;">3. Body JSON:</p>
       <code>curl -X POST -H "Content-Type: application/json" -d '{"phoneNumber":"5491123456789"}' http://localhost:3500/proxy/endpoint</code>
+      
+      <h3 style="color: #ffa500; margin: 20px 0 10px;">🔄 Sincronización Externa</h3>
+      <p style="color: #aaa; margin-bottom: 16px;">
+        Configura variables de entorno para sincronizar desde tu app:
+      </p>
+      <code>SYNC_API_URL=https://tu-api.com/proxy-configs<br>SYNC_API_KEY=tu_api_key</code>
     </div>
   </div>
   
@@ -317,6 +360,7 @@
       e.preventDefault();
       
       const phoneNumber = document.getElementById('phoneNumber').value;
+      const phoneNumberId = document.getElementById('phoneNumberId').value;
       const targetUrl = document.getElementById('targetUrl').value;
       const description = document.getElementById('description').value;
       
@@ -324,7 +368,7 @@
         const res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phoneNumber, targetUrl, description })
+          body: JSON.stringify({ phoneNumber, phoneNumberId, targetUrl, description })
         });
         
         if (res.ok) {
@@ -366,8 +410,9 @@
       }
       
       list.innerHTML = configs.map(config => `
-        <div class="config-item ${config.active ? '' : 'inactive'}">
-          <span class="phone">📱 ${formatPhone(config.phoneNumber)}</span>
+        <div class="config-item ${config.active ? '' : 'inactive'} ${config.synced ? 'synced' : ''}">
+          <span class="phone">📱 ${formatPhone(config.phoneNumber)}${config.synced ? '<span class="badge sync">SYNC</span>' : ''}</span>
+          <span class="phone-id">${config.phoneNumberId || '-'}</span>
           <span class="url">🔗 ${config.targetUrl}</span>
           <span class="description">${config.description || 'Sin descripción'}</span>
           <button class="btn btn-toggle ${config.active ? 'active' : 'inactive'}" 

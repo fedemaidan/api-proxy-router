@@ -40,10 +40,11 @@ const configStore = {
     return configs;
   },
   
-  add: ({ phoneNumber, targetUrl, description }) => {
+  add: ({ phoneNumber, targetUrl, description, phoneNumberId }) => {
     const newConfig = {
       id: Date.now().toString(),
       phoneNumber: phoneNumber.replace(/\D/g, ''), // Solo números
+      phoneNumberId: phoneNumberId || null, // ID de Meta WhatsApp Business
       targetUrl,
       description: description || '',
       active: true,
@@ -88,6 +89,40 @@ const configStore = {
              cleanPhone.endsWith(c.phoneNumber) ||
              c.phoneNumber.endsWith(cleanPhone);
     });
+  },
+  
+  // Buscar por phone_number_id de Meta (más preciso)
+  findByPhoneNumberId: (phoneNumberId) => {
+    return configs.find(c => c.phoneNumberId === phoneNumberId);
+  },
+  
+  // Sincronizar desde API externa
+  // Espera un array de objetos con: phoneNumber, targetUrl, description, phoneNumberId, active
+  syncFromExternal: (externalConfigs) => {
+    if (!Array.isArray(externalConfigs)) {
+      console.error('[SYNC] Los datos externos no son un array');
+      return;
+    }
+    
+    // Mapear configs externas al formato interno
+    const newConfigs = externalConfigs.map((ext, index) => ({
+      id: ext.id || `sync_${Date.now()}_${index}`,
+      phoneNumber: (ext.phoneNumber || ext.phone || '').replace(/\D/g, ''),
+      phoneNumberId: ext.phoneNumberId || ext.phone_number_id || null,
+      targetUrl: ext.targetUrl || ext.target_url || ext.url,
+      description: ext.description || ext.name || '',
+      active: ext.active !== false,
+      synced: true,
+      createdAt: ext.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    })).filter(c => c.phoneNumber && c.targetUrl);
+    
+    // Reemplazar configuraciones sincronizadas, mantener las locales
+    const localConfigs = configs.filter(c => !c.synced);
+    configs = [...localConfigs, ...newConfigs];
+    
+    saveConfigs();
+    console.log(`[SYNC] ${newConfigs.length} configuraciones sincronizadas`);
   }
 };
 
