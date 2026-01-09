@@ -371,11 +371,9 @@
       e.preventDefault();
       
       const phoneNumber = document.getElementById('phoneNumber').value;
-      const phoneNumberId = document.getElementById('phoneNumberId').value;
+      const routeBy = document.getElementById('routeBy').value;
       const targetUrl = document.getElementById('targetUrl').value;
       const description = document.getElementById('description').value;
-      
-      const routeBy = document.getElementById('routeBy').value;
       
       try {
         const res = await fetch(API_URL, {
